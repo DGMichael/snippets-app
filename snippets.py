@@ -21,8 +21,31 @@ def make_parser():
     put_parser.add_argument("snippet", help = "The snippet text")
     put_parser.add_argument("filename", default = "snippets.csv", nargs = "?", help = "The snippet filename")
 
+    #Subparser for the get command:
+    logging.debug("Constructing get parser")
+    get_parser = subparsers.add_parser("get", help = "Retrieve a snippet")
+    get_parser.add_argument("name", help = "The name of a snippet")
+    get_parser.add_argument("filename", default = "snippets.csv", nargs = "?", help = "The snippet filename")
+
     return parser
 
+def get(name, filename):
+    "Print a snippet stored in the csv"
+    logging.info("Asked to get {!r} from {!r}".format(name, filename))
+    logging.debug("Opening file")
+    #Open file, generate reader object:
+    with open(filename,'rb') as file_obj:
+        reader = csv.reader(file_obj)
+        lineDict = {}
+        for line in reader:
+            key = line[0]
+            value = line[1]
+            lineDict[key] = value
+    #Generate return:
+    if name not in lineDict.keys():
+        return False
+    else:
+        return name, lineDict[name]
 
 def put(name, snippet, filename):
     "Store a snippet with an associated name in the CSV"
@@ -33,7 +56,7 @@ def put(name, snippet, filename):
         logging.debug("Writting snippet to file")
         writer.writerow([name,snippet])
     logging.debug("Write successful")
-    return name, snippet
+    return name , snippet
 
 def main():
     "Main function"
@@ -47,6 +70,13 @@ def main():
     if command == "put":
         name, snippet = put(**arguments)
         print "Stored {!r} as {!r}".format(snippet, name)
+
+    if command == "get":
+        get_return = get(**arguments)
+        if get_return == False:
+            print "Input not found in file"
+        else:
+            print "The query {!r} returned {!r}".format(get_return[0], get_return[1])
 
 if __name__ == "__main__":
     main()
